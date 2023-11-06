@@ -1,0 +1,12 @@
+Reading counter_la_fir.hex
+counter_la_fir.hex loaded into memory
+Memory 5 bytes = 0x6f 0x00 0x00 0x0b 0x13
+VCD info: dumpfile counter_la_fir.vcd opened for output.
+LA Test 1 started
+FIR return value passed,      0
+FIR return value passed,    -10
+FIR return value passed,    -25
+FIR return value passed,    158
+......
+FIR return value passed,   1098
+LA Test 2 passed
