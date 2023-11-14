@@ -5,36 +5,36 @@ module fir_wrapper # (
 )(
     output wire                            awready,
     output wire                            wready,
-    input  reg                             awvalid,
-    input  reg         [(pADDR_WIDTH-1):0] awaddr,
-    input  reg                             wvalid,
-    input  reg  signed [(pDATA_WIDTH-1):0] wdata,
+    input  wire                            awvalid,
+    input  wire        [(pADDR_WIDTH-1):0] awaddr,
+    input  wire                            wvalid,
+    input  wire signed [(pDATA_WIDTH-1):0] wdata,
     output wire                            arready,
-    input  reg                             rready,
-    input  reg                             arvalid,
-    input  reg         [(pADDR_WIDTH-1):0] araddr,
+    input  wire                            rready,
+    input  wire                            arvalid,
+    input  wire        [(pADDR_WIDTH-1):0] araddr,
     output wire                            rvalid,
     output wire signed [(pDATA_WIDTH-1):0] rdata,
-    input  reg                             ss_tvalid,
-    input  reg  signed [(pDATA_WIDTH-1):0] ss_tdata,
-    input  reg                             ss_tlast,
+    input  wire                            ss_tvalid,
+    input  wire signed [(pDATA_WIDTH-1):0] ss_tdata,
+    input  wire                            ss_tlast,
     output wire                            ss_tready,
-    input  reg                             sm_tready,
+    input  wire                            sm_tready,
     output wire                            sm_tvalid,
     output wire signed [(pDATA_WIDTH-1):0] sm_tdata,
     output wire                            sm_tlast,
-    input  reg                             axis_clk,
-    input  reg                             axis_rst_n
+    input  wire                            axis_clk,
+    input  wire                            axis_rst_n
 );
     // ram interface for tap
-    wire [3:0]               tap_WE;
+    wire                     tap_WE;
     wire                     tap_EN;
     wire [(pDATA_WIDTH-1):0] tap_Di;
     wire [(pADDR_WIDTH-1):0] tap_A;
     wire [(pDATA_WIDTH-1):0] tap_Do;
 
     // ram interface for data
-    wire [3:0]               data_WE;
+    wire                     data_WE;
     wire                     data_EN;
     wire [(pDATA_WIDTH-1):0] data_Di;
     wire [(pADDR_WIDTH-1):0] data_A;
@@ -84,22 +84,24 @@ module fir_wrapper # (
     
     // RAM for tap
     bram11 tap_RAM (
-        .CLK (axis_clk ),
-        .WE  (tap_WE   ),
-        .EN  (tap_EN   ),
-        .Di  (tap_Di   ),
-        .A   (tap_A    ),
-        .Do  (tap_Do   )
+        .clk   (axis_clk           ),
+        .we    (tap_WE             ),
+        .re    (tap_EN & (~tap_WE) ),
+        .wdi   (tap_Di             ),
+        .waddr ((tap_A >> 2)       ),  // word address
+        .raddr ((tap_A >> 2)       ),  // word address
+        .rdo   (tap_Do             )
     );
 
     // RAM for data: choose bram11 or bram12
     bram11 data_RAM(
-        .CLK (axis_clk ),
-        .WE  (data_WE  ),
-        .EN  (data_EN  ),
-        .Di  (data_Di  ),
-        .A   (data_A   ),
-        .Do  (data_Do  )
+        .clk   (axis_clk             ),
+        .we    (data_WE              ),
+        .re    (data_EN & (~data_WE) ),
+        .wdi   (data_Di              ),
+        .waddr ((data_A >> 2)        ),  // word address
+        .raddr ((data_A >> 2)        ),  // word address
+        .rdo   (data_Do              )
     );
 
 endmodule
