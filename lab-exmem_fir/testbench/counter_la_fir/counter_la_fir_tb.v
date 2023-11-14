@@ -173,6 +173,8 @@ module counter_la_fir_tb;
 		$display("FIR return value passed, %d", $signed(checkbits));
 		wait(checkbits == -16'd10);
 		$display("FIR return value passed, %d", $signed(checkbits));
+		wait(checkbits == -16'd29);
+		$display("FIR return value passed, %d", $signed(checkbits));
 		wait(checkbits == -16'd25);
 		$display("FIR return value passed, %d", $signed(checkbits));
 		wait(checkbits == 16'd158);

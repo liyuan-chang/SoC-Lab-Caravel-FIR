@@ -5,6 +5,7 @@ VCD info: dumpfile counter_la_fir.vcd opened for output.
 LA Test 1 started
 FIR return value passed,      0
 FIR return value passed,    -10
+FIR return value passed,    -29
 FIR return value passed,    -25
 FIR return value passed,    158
 ......
