@@ -85,10 +85,14 @@ module user_proj_example #(
     assign io_oeb = 0;
     assign irq = 3'd0;
 
+    //wb_fir
+    wire wbs_ack_fir;
+    wire [31:0] wbs_dat_fir;
+
     // WB interface
     wire        valid;
     wire [ 3:0] wstrb;
-    assign valid = wbs_cyc_i && wbs_stb_i;
+    assign valid = wbs_cyc_i && wbs_stb_i && wbs_adr_i[31:24]==8'h38;
     assign wstrb = wbs_sel_i & {4{wbs_we_i}};
 
     localparam BW = $clog2(DELAYS+2);
@@ -97,30 +101,10 @@ module user_proj_example #(
     reg  [  31:0] wbs_dat_o_r, wbs_dat_o_w;
     reg  [BW-1:0] count_r, count_w;
 
-    assign wbs_ack_o = wbs_ack_o_r;
-    assign wbs_dat_o = wbs_dat_o_r;
+    assign wbs_ack_o = wbs_ack_o_r || wbs_ack_fir;
+    assign wbs_dat_o = (wbs_adr_i[31:24]==8'h38)? wbs_dat_o_r : wbs_dat_fir;
 
-    // AXI interface
-    wire               awready;
-    wire               wready;
-    reg                awvalid;
-    reg         [31:0] awaddr;
-    reg                wvalid;
-    reg  signed [31:0] wdata;
-    wire               arready;
-    reg                rready;
-    reg                arvalid;
-    reg         [31:0] araddr;
-    wire               rvalid;
-    wire signed [31:0] rdata;
-    reg                ss_tvalid;
-    reg  signed [31:0] ss_tdata;
-    reg                ss_tlast;
-    wire               ss_tready;
-    reg                sm_tready;
-    wire               sm_tvalid;
-    wire signed [31:0] sm_tdata;
-    wire               sm_tlast;
+
 
     always @(*) begin
         count_w     = count_r;
@@ -128,7 +112,7 @@ module user_proj_example #(
         wbs_dat_o_w = 0;
 
         if (valid && !wbs_ack_o_r) begin
-            if (count_r == (DELAYS + 2)) begin
+            if (count_r == 1) begin
                 count_w     = 0;
                 wbs_ack_o_w = 1;
                 wbs_dat_o_w = rdata;
@@ -164,33 +148,17 @@ module user_proj_example #(
         .A0  (wbs_adr_i )
     );
 
-    fir_wrapper # (
-        .pADDR_WIDTH (32 ),
-        .pDATA_WIDTH (32 ),
-        .Tape_Num    (11 )
-    ) fir_wrapper_inst (
-        .awready    (awready   ),
-        .wready     (wready    ),
-        .awvalid    (awvalid   ),
-        .awaddr     (awaddr    ),
-        .wvalid     (wvalid    ),
-        .wdata      (wdata     ),
-        .arready    (arready   ),
-        .rready     (rready    ),
-        .arvalid    (arvalid   ),
-        .araddr     (araddr    ),
-        .rvalid     (rvalid    ),
-        .rdata      (rdata     ),
-        .ss_tvalid  (ss_tvalid ),
-        .ss_tdata   (ss_tdata  ),
-        .ss_tlast   (ss_tlast  ),
-        .ss_tready  (ss_tready ),
-        .sm_tready  (sm_tready ),
-        .sm_tvalid  (sm_tvalid ),
-        .sm_tdata   (sm_tdata  ),
-        .sm_tlast   (sm_tlast  ),
-        .axis_clk   (clk       ),
-        .axis_rst_n (~rst      )
+    fir_wrapper fir0(
+    .wb_clk_i(wb_clk_i),
+    .wb_rst_i(wb_rst_i),
+    .wbs_stb_i(wbs_stb_i),
+    .wbs_cyc_i(wbs_cyc_i),
+    .wbs_we_i(wbs_we_i),
+    .wbs_sel_i(wbs_sel_i),
+    .wbs_dat_i(wbs_dat_i),
+    .wbs_adr_i(wbs_adr_i),
+    .wbs_ack_o(wbs_ack_fir),
+    .wbs_dat_o(wbs_dat_fir)
     );
 
 endmodule

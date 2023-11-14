@@ -21,10 +21,10 @@ progmem.bin: progmem.elf
 	$(OBJCOPY) -O binary $< progmem.bin
 
 progmem.elf: 
-	$(LD) $(LDFLAGS) -o progmem.elf ../../../firmware/crt0_vex.S ../../../firmware/isr.c counter_la.c -lm 
+	$(LD) $(LDFLAGS) -o progmem.elf ../../../firmware/crt0_vex.S ../../../firmware/isr.c counter_la_fir.c fir.c -lm 
 
 progmem_dis.elf:
-	$(LD) $(LDFLAGS) -o progmem_dis.elf ../../../firmware/crt0_vex.S ../../../firmware/isr.c counter_la.c -lm
+	$(LD) $(LDFLAGS) -o progmem_dis.elf ../../../firmware/crt0_vex.S ../../../firmware/isr.c counter_la_fir.c fir.c -lm
 
 gdb:
 	$(TARGET)-gdb -q \

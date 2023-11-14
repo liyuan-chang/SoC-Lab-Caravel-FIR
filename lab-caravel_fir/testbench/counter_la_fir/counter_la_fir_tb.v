@@ -140,7 +140,7 @@ module counter_la_fir_tb;
 		$dumpvars(0, counter_la_fir_tb);
 
 		// Repeat cycles of 1000 clock edges as needed to complete testbench
-		repeat (250) begin
+		repeat (500) begin
 			repeat (1000) @(posedge clock);
 			// $display("+1000 cycles");
 		end
@@ -154,35 +154,42 @@ module counter_la_fir_tb;
 		$finish;
 	end
 
+
+	reg signed [31:0] golden_list[0:599];
+	// read file
+	integer Din, golden, golden_data, m, n, o;
+	initial begin
+	    golden = $fopen("./out_gold.dat","r");
+	    for(m=0;m<600;m=m+1) begin
+	    	golden_data = $fscanf(golden,"%d", golden_list[m]);
+	    end
+    end
+
+	reg [31:0] latency_cnt;
+	always@(posedge clock) latency_cnt <= latency_cnt + 1;
+
+
 	initial begin
 		wait(checkbits == 16'hAB40);
 		$display("LA Test 1 started");
-		//wait(checkbits == 16'hAB41);
 
-		//wait(checkbits == 16'd40);
-		//$display("Call function matmul() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
-		//wait(checkbits == 16'd893);
-		//$display("Call function matmul() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
-		//wait(checkbits == 16'd2541);
-		//$display("Call function matmul() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
-		//wait(checkbits == 16'd2669);
-		//$display("Call function matmul() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);		
+		wait(checkbits == 16'hA400);
+		$display("DATALEN write done");
 
-		// check fir answers
-		wait(checkbits == 16'd0);
-		$display("FIR return value passed, %d", $signed(checkbits));
-		wait(checkbits == -16'd10);
-		$display("FIR return value passed, %d", $signed(checkbits));
-		wait(checkbits == -16'd25);
-		$display("FIR return value passed, %d", $signed(checkbits));
-		wait(checkbits == 16'd158);
-		$display("FIR return value passed, %d", $signed(checkbits));
-		$display("......");
-		wait(checkbits == 16'd1098);
-		$display("FIR return value passed, %d", $signed(checkbits));
+		wait(checkbits == 16'hA500);
+		$display("LA Test 1 passed");
+		latency_cnt = 0;
+
+		wait(checkbits == 16'hA510);
+		$display("write first x done");
+
+		for(n=0; n<600; n=n+1) begin
+			wait($signed(checkbits) == golden_list[n]);
+			$display("data %d pass", n);
+		end
 
 		wait(checkbits == 16'hAB51);
-		$display("LA Test 2 passed");
+		$display("LA Test 2 passed, latency = %d", latency_cnt);
 		#10000;
 		$finish;
 	end

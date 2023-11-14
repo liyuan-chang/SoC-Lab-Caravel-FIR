@@ -128,17 +128,17 @@ void main()
 	}
 */	
 	int* tmp = fir();
-	reg_mprj_datal = *tmp << 16;
-	reg_mprj_datal = *(tmp+1) << 16;
-	reg_mprj_datal = *(tmp+2) << 16;
-	reg_mprj_datal = *(tmp+3) << 16;
-	reg_mprj_datal = *(tmp+4) << 16;
-	reg_mprj_datal = *(tmp+5) << 16;
-	reg_mprj_datal = *(tmp+6) << 16;
-	reg_mprj_datal = *(tmp+7) << 16;
-	reg_mprj_datal = *(tmp+8) << 16;
-	reg_mprj_datal = *(tmp+9) << 16;
-	reg_mprj_datal = *(tmp+10) << 16;	
+	// reg_mprj_datal = *tmp << 16;
+	// reg_mprj_datal = *(tmp+1) << 16;
+	// reg_mprj_datal = *(tmp+2) << 16;
+	// reg_mprj_datal = *(tmp+3) << 16;
+	// reg_mprj_datal = *(tmp+4) << 16;
+	// reg_mprj_datal = *(tmp+5) << 16;
+	// reg_mprj_datal = *(tmp+6) << 16;
+	// reg_mprj_datal = *(tmp+7) << 16;
+	// reg_mprj_datal = *(tmp+8) << 16;
+	// reg_mprj_datal = *(tmp+9) << 16;
+	// reg_mprj_datal = *(tmp+10) << 16;	
 
 	//print("\n");
 	//print("Monitor: Test 1 Passed\n\n");	// Makes simulation very long!
