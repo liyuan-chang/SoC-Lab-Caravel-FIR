@@ -13,7 +13,6 @@ Integrate FIR Engine and Execution Memory with WB-AXI Interface into User Projec
         * bram.v
         * user_proj_example.counter.v
     * simulation_result/
-    * synthesis_report/
 * lab-caravel_fir/
     * testbench/counter_la_fir/
         * counter_la_fir_tb.v
@@ -28,6 +27,7 @@ Integrate FIR Engine and Execution Memory with WB-AXI Interface into User Projec
         * fir_wrapper.v
         * fir.v
         * user_proj_example.counter.v
+    * constraint/
     * simulation_result/
     * synthesis_report/
 
