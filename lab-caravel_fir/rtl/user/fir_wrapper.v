@@ -128,136 +128,108 @@ fir inst_fir(
     .axis_rst_n(~wb_rst_i)
 );
 
-// axi_lite write
-reg [2:0] axilw_state_w, axilw_state_r;
-reg axilw_ack;
+
+reg [2:0] wb_state_w, wb_state_r;
+reg [31:0] axilr_data_w, axilr_data_r;
+reg [31:0] sm_data_buf_w, sm_data_buf_r;
+localparam S_IDLE = 0;
+localparam S_ACK = 1;
+localparam S_AXILW = 2;
+localparam S_AXILR_WAITREADY = 3;
+localparam S_AXILR = 4;
+localparam S_AXISW = 5;
+localparam S_AXISR = 6;
+
+
 always @(*) begin
     awvalid_w = 0;
     wvalid_w = 0;
     awaddr_w = awaddr;
     wdata_w = wdata;
-    axilw_state_w = axilw_state_r;
-    axilw_ack = 0;
-    case (axilw_state_r)
-        0:begin
+
+    arvalid_w = 0;
+    rready_w = 0;
+    araddr_w = araddr;
+    axilr_data_w = axilr_data_r;
+
+    ss_tvalid_w = 0;
+    ss_tdata_w = ss_tdata;
+
+    sm_tready_w = 0;
+    sm_data_buf_w = sm_data_buf_r;
+
+    wb_state_w = wb_state_r;
+    wbs_ack_o = 0;
+    case (wb_state_r)
+        S_IDLE:begin
             if (wbs_stb_i && wbs_cyc_i && (wbs_we_i) && axil_valid) begin
                 awvalid_w = 1;
                 wvalid_w = 1;
                 awaddr_w = wbs_adr_i[11:0];
                 wdata_w = wbs_dat_i[31:0];
-                axilw_state_w = 1;
+                wb_state_w = S_AXILW;
             end
-        end 
-        1:begin
-            if (awready && wready) begin
-                awvalid_w = 0;
-                wvalid_w = 0;
-                axilw_state_w = 2;
-                axilw_ack = 1;
-            end
-        end
-        2: axilw_state_w = 0;
-    endcase
-end
 
-// axi_lite read
-reg [1:0] axilr_state_w, axilr_state_r;
-reg [31:0] axilr_data_w, axilr_data_r;
-reg axilr_ack;
-always @(*) begin
-    arvalid_w = 0;
-    rready_w = 0;
-    araddr_w = araddr;
-    axilr_state_w = axilr_state_r;
-    axilr_data_w = axilr_data_r;
-    axilr_ack = 0;
-    case (axilr_state_r)
-        0:begin
             if (wbs_stb_i && wbs_cyc_i && (~wbs_we_i) && axil_valid) begin
                 arvalid_w = 1;
                 araddr_w = wbs_adr_i[11:0];
-                axilr_state_w = 1;
+                wb_state_w = S_AXILR_WAITREADY;
             end
-        end 
-        1:begin
-            arvalid_w = 1;
-            if (arready) begin
-                arvalid_w = 0;
-                axilr_state_w = 2;
-                rready_w = 1;
-            end
-        end
-        2:begin
-            if (rvalid) begin
-                axilr_data_w = rdata;
-                axilr_state_w = 3;
-                axilr_ack = 1;
-            end
-        end
-        3: axilr_state_w = 0;
-    endcase
-end
 
-// axi_s slave (write)
-reg [1:0] ss_state_w, ss_state_r;
-reg ss_ack;
-
-always @(*) begin
-    ss_tvalid_w = 0;
-    ss_tdata_w = ss_tdata;
-    ss_state_w = ss_state_r;
-    ss_ack = 0;
-    case (ss_state_r)
-        0:begin
             if (wbs_stb_i && wbs_cyc_i && (wbs_we_i) && axis_valid) begin
                 ss_tvalid_w = 1;
                 ss_tdata_w = wbs_dat_i[31:0];
-                ss_state_w = 1;
+                wb_state_w = S_AXISW;
             end
-        end 
-        1:begin
-            if (ss_tready) begin
-                ss_tvalid_w = 0;
-                ss_state_w = 2;
-                ss_ack = 1;
-            end
-        end
-        2: ss_state_w = 0;
-    endcase
-end
 
-// axi_s master (read)
-reg [1:0] sm_state_w, sm_state_r;
-reg sm_ack;
-reg [31:0] sm_data_buf_w, sm_data_buf_r;
-always @(*) begin
-    sm_tready_w = 0;
-    sm_state_w = sm_state_r;
-    sm_ack = 0;
-    sm_data_buf_w = sm_data_buf_r;
-    case (sm_state_r)
-        0:begin
             if (wbs_stb_i && wbs_cyc_i && (~wbs_we_i) && axis_valid) begin
                 sm_tready_w = 1;
-                sm_state_w = 1;
+                wb_state_w = S_AXISR;
             end
         end 
-        1:begin
+        S_AXILW:begin
+            if (awready && wready) begin
+                awvalid_w = 0;
+                wvalid_w = 0;
+                wb_state_w = S_ACK;
+            end
+        end
+        S_AXILR_WAITREADY:begin
+            arvalid_w = 1;
+            if (arready) begin
+                arvalid_w = 0;
+                wb_state_w = S_AXILR;
+                rready_w = 1;
+            end
+        end
+        S_AXILR:begin
+            if (rvalid) begin
+                axilr_data_w = rdata;
+                wb_state_w = S_ACK;
+            end
+        end
+        S_AXISW:begin
+            if (ss_tready) begin
+                ss_tvalid_w = 0;
+                wb_state_w = S_ACK;
+            end
+        end
+        S_AXISR:begin
             sm_tready_w = 1;
             if (sm_tvalid) begin
                 sm_data_buf_w = sm_tdata;
-                sm_ack = 1;
-                sm_state_w = 2;
+                wb_state_w = S_ACK;
             end
         end
-        2:sm_state_w = 0;
+        S_ACK:begin
+            wb_state_w = S_IDLE;
+            wbs_ack_o = 1;
+        end
     endcase
-
 end
 
 always @(posedge wb_clk_i or posedge wb_rst_i) begin
     if (wb_rst_i)begin
-        wbs_ack_o <= 0;
         wbs_dat_o <= 0;
 
         awvalid <= 0;
@@ -273,19 +245,12 @@ always @(posedge wb_clk_i or posedge wb_rst_i) begin
         ss_tdata <= 0;
 
         sm_tready <= 0;
-
-
-        axilw_state_r <= 0;
-        axilr_state_r <= 0;
-        axilr_data_r <= 0;
-
-        ss_state_r <= 0;
-        sm_state_r <= 0;
         sm_data_buf_r <= 0;
+
+        wb_state_r <= 0;
 
     end
     else begin
-        wbs_ack_o <= (axilw_ack || axilr_ack || ss_ack || sm_ack);
         wbs_dat_o <= axis_valid ? sm_data_buf_w : axilr_data_w;
 
         awvalid <= awvalid_w;
@@ -302,13 +267,11 @@ always @(posedge wb_clk_i or posedge wb_rst_i) begin
 
         sm_tready <= sm_tready_w;
 
-        axilw_state_r <= axilw_state_w;
-        axilr_state_r <= axilr_state_w;
         axilr_data_r <= axilr_data_w;
 
-        ss_state_r <= ss_state_w;
-        sm_state_r <= sm_state_w;
         sm_data_buf_r <= sm_data_buf_w;
+
+        wb_state_r <= wb_state_w;
 
     end
 end
